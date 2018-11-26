@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './App.css';
-import {AmbientLight, Mesh, MeshFaceMaterial, PerspectiveCamera, Scene, WebGLRenderer} from "three";
+import {AmbientLight, Mesh, MeshFaceMaterial, PerspectiveCamera, Scene, WebGLRenderer, SpotLight} from "three";
 import {createDieMaterials} from "./teal/materials";
 import {createDieGeometry} from "./teal/geometry";
 
@@ -14,7 +14,16 @@ class App extends Component {
         this.scene = new Scene();
 
         var ambientLight = new AmbientLight(0xf0f0f0);
+        var spotLight = new SpotLight( 0xffffff );
+        spotLight.position.set( 100, 1000, 100 );
+
+        
+
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+
         this.scene.add(ambientLight);
+        this.scene.add(spotLight);
 
 
         const dieGometry = createDieGeometry('d20',50);
@@ -26,6 +35,7 @@ class App extends Component {
 
 
         this.renderer = new WebGLRenderer( { antialias: true } );
+        
         this.renderer.setSize( window.innerWidth, window.innerHeight );
         document.body.appendChild( this.renderer.domElement );
         this.animate();

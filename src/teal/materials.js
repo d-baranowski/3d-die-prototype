@@ -28,7 +28,7 @@ var materialOptions = {
     specular: '#171d1f',
     color: '#ffffff',
     emissive: '#000000',
-    shininess: 70,
+    shininess: 20,
     shading: FlatShading
 };
 
