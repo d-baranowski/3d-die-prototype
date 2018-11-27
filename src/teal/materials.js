@@ -6,7 +6,9 @@ var d20Labels = [' ', '0', '1', '2', '3', '4', '5', '6', '7', '8',
 var d100Labels = [' ', '00', '10', '20', '30', '40', '50',
     '60', '70', '80', '90'];
 
-var scale = 50;
+export const scale = 50;
+export const defaultLabelColor = '#ffffff';
+export const defaultDieColor = '#661017';
 
 var dieInfo = {
     d4: {mass: 300, inertia: 5, radiusFactor: 1.2, marginFactor: null},
@@ -71,14 +73,14 @@ export function createDieMaterials(type, labelColor, dieColor) {
     }
 }
 
-function _createDieMaterials(faceLabels, margin, labelColor, dieColor) {
+export function _createDieMaterials(faceLabels, margin, labelColor, dieColor) {
     function createTextTexture(text, labelColor, dieColor) {
         if (text === undefined) {
             return null;
         }
-        var canvas = document.createElement("canvas");
-        var context = canvas.getContext("2d");
-        var size = scale / 2;
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        const size = scale / 2;
         canvas.width = size + margin;
         canvas.height = size + margin;
         context.font = size + "pt Arial";
@@ -91,12 +93,12 @@ function _createDieMaterials(faceLabels, margin, labelColor, dieColor) {
         if (text === '6' || text === '9') {
             context.fillText('  .', canvas.width / 2, canvas.height / 2);
         }
-        var texture = new Texture(canvas);
+        const texture = new Texture(canvas);
         texture.needsUpdate = true;
         return texture;
     }
-    var materials = [];
-    for (var i = 0; i < faceLabels.length; ++i) {
+    const materials = [];
+    for (let i = 0; i < faceLabels.length; ++i) {
         materials.push(
             new MeshPhongMaterial(
                 copyto(materialOptions,

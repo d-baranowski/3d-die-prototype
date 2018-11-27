@@ -41,7 +41,7 @@ function makeGeom(vertices, faces, radius, tab, af) {
     return geom;
 }
 
-function createDieGeom(vertices, faces, radius, tab, af) {
+export function createDieGeom(vertices, faces, radius, tab, af) {
     return makeGeom(vertices, faces, radius, tab, af);
 }
 
