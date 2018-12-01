@@ -12,8 +12,6 @@ import * as serviceWorker from './serviceWorker';
 // Learn more about service workers: http://bit.ly/CRA-PWA
 serviceWorker.unregister();
 
-let scale = 50; // THIS IS REALLY GLOBAL
-
 const d20Labels = [' ', '0', '1', '2', '3', '4', '5', '6', '7', '8',
     '9', '10', '11', '12', '13', '14', '15', '16', '17',
     '18', '19', '20'];
@@ -59,21 +57,17 @@ function createDieGeom(vertices, faces, radius, tab, af) {
     return geom;
 }
 
-function createDieMaterials(type, labelColor, dieColor) {
+function createDieMaterials(type, scale) {
     if (type === 'd4') {
-        return createD4Materials(scale / 2, scale * 2,
-            labelColor,
-            dieColor);
+        return createD4Materials(scale / 2, scale * 2);
     } else {
         return _createDieMaterials(dieInfo[type].labels,
-            scale * dieInfo[type].marginFactor,
-            labelColor,
-            dieColor);
+            scale * dieInfo[type].marginFactor, scale);
     }
 }
 
-function _createDieMaterials(faceLabels, margin, labelColor, dieColor) {
-    function createTextTexture(text, labelColor, dieColor) {
+function _createDieMaterials(faceLabels, margin, scale) {
+    function createTextTexture(text) {
         if (text === undefined) {
             return null;
         }
@@ -83,11 +77,11 @@ function _createDieMaterials(faceLabels, margin, labelColor, dieColor) {
         canvas.width = size + margin;
         canvas.height = size + margin;
         context.font = size + "pt Arial";
-        context.fillStyle = dieColor;
+        context.fillStyle = defaultDieColor;
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.textAlign = "center";
         context.textBaseline = "middle";
-        context.fillStyle = labelColor;
+        context.fillStyle = defaultLabelColor;
         context.fillText(text, canvas.width / 2, canvas.height / 2);
         if (text === '6' || text === '9') {
             context.fillText('  .', canvas.width / 2, canvas.height / 2);
@@ -101,25 +95,25 @@ function _createDieMaterials(faceLabels, margin, labelColor, dieColor) {
     for (let i = 0; i < faceLabels.length; ++i) {
         materials.push(
             new THREE.MeshPhongMaterial(
-                {...materialOptions, map: createTextTexture(faceLabels[i], labelColor, dieColor)}
+                {...materialOptions, map: createTextTexture(faceLabels[i])}
             )
         );
     }
     return materials;
 }
 
-function createD4Materials(size, margin, labelColor, dieColor) {
-    function createD4Text(text, labelColor, dieColor) {
+function createD4Materials(size, margin) {
+    function createD4Text(text) {
         const canvas = document.createElement("canvas");
         const context = canvas.getContext("2d");
         canvas.width = size + margin;
         canvas.height = size + margin;
         context.font = size + "pt Arial";
-        context.fillStyle = dieColor;
+        context.fillStyle = defaultDieColor;
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.textAlign = "center";
         context.textBaseline = "middle";
-        context.fillStyle = labelColor;
+        context.fillStyle = defaultLabelColor;
         context.translate(0, size / 10);
         for (let i in text) {
             context.fillText(text[i], canvas.width / 2,
@@ -137,7 +131,7 @@ function createD4Materials(size, margin, labelColor, dieColor) {
     const labels = [[], [0, 0, 0], [2, 4, 3], [1, 3, 4], [2, 1, 4], [1, 2, 3]];
     for (let i = 0; i < labels.length; ++i) {
         materials.push(new THREE.MeshPhongMaterial(
-            {...materialOptions, map: createD4Text(labels[i], labelColor, dieColor)})
+            {...materialOptions, map: createD4Text(labels[i])})
         );
     }
     return materials;
@@ -247,20 +241,17 @@ const dieInfo = {
     }
 };
 
-function createDie(type, labelColor, dieColor) {
-    labelColor = labelColor || defaultLabelColor;
-    dieColor = dieColor || defaultDieColor;
-
+function createDie(type, _scale) {
     const material = new THREE.MeshFaceMaterial(
-        createDieMaterials(type, labelColor, dieColor)
+        createDieMaterials(type, _scale)
     );
-    const geometry = createDieGeometry(type, scale * dieInfo[type].radiusFactor);
+    const geometry = createDieGeometry(type, _scale * dieInfo[type].radiusFactor);
     const die = new THREE.Mesh(geometry, material);
 
     die.userData = {
         type: type,
-        labelColor: labelColor,
-        dieColor: dieColor
+        labelColor: defaultLabelColor,
+        dieColor: defaultDieColor
     };
     return die;
 }
@@ -277,7 +268,7 @@ class DieBox {
             this.h = this.ch;
         }
         this.aspect = Math.min(this.cw / this.w, this.ch / this.h);
-        scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
+        this._scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
 
         this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setSize(this.cw * 2, this.ch * 2);
@@ -319,7 +310,7 @@ class DieBox {
         const step = this.w / 4.5;
 
         for (let i = 0, pos = -3; i < knownDieTypes.length; ++i, ++pos) {
-            const die = createDie(knownDieTypes[i]);
+            const die = createDie(knownDieTypes[i], this._scale);
             die.position.set(pos * step, 0, step * 0.5);
 
             this.dice.push(die);
