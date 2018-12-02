@@ -1,60 +1,64 @@
 import React, {Component} from 'react';
-import {AmbientLight, PerspectiveCamera, Scene, SpotLight, WebGLRenderer} from "three";
-import ReactDOM from 'react-dom';
+import DieBox from "../dice/DiceBox";
+import createDie from "../dice/diceMeshCreator";
+
+export const mapOver = (value, istart, istop, ostart, ostop) => {
+    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
 
 class SceneComponent extends Component {
     static defaultProps = {
         width: window.innerWidth,
         height: window.innerHeight,
-        objects: []
+        dice: ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100']
     };
 
-    constructor(props) {
-        super(props);
-
-        this.camera = new PerspectiveCamera( 20, props.width / props.height, 0.01, 100 );
-        this.camera.position.z = 10;
-        this.scene = new Scene();
-
-        this.ambientLight = new AmbientLight(0xf0f0f0);
-        this.spotLight = new SpotLight( 0xffffff );
-
-        this.spotLight.position.set( 100, 1000, 100 );
-        this.spotLight.shadow.mapSize.width = 1024;
-        this.spotLight.shadow.mapSize.height = 1024;
-
-        this.scene.add(this.ambientLight);
-        this.scene.add(this.spotLight);
-
-        props.objects.forEach(obj => {
-           this.scene.add(obj);
-        });
-
-        this.renderer = new WebGLRenderer( { antialias: true, alpha: true  } );
-        this.renderer.setClearColor( 0xffffff, 0 );
-
-        this.renderer.setSize( props.width, props.height );
-    }
-
     componentDidMount() {
-        this.domRef = ReactDOM.findDOMNode(this);
-        this.domRef.appendChild( this.renderer.domElement );
+        this.box = new DieBox(this.canvas);
+        this.diceReferences = {};
+
+        const step = this.box.w / 4.5;
+        const knownDieTypes = this.props.dice;
+        const r = 200;
+
+        for (let i = 0, pos = -3; i < knownDieTypes.length; ++i, ++pos) {
+            const die = createDie(knownDieTypes[i], this.box._scale);
+            // mapOver(distanceToDestination, 200, 1600, placeholderPosition.width, containerPosition.width)
+            const angle = mapOver(i, 0, knownDieTypes.length, 0, 2 * Math.PI);
+            const x = r*Math.cos(angle) + 5;
+            const y = r*Math.sin(angle) + 5;
+
+            /*die.position.set(x, y, 0);*/
+            die.position.set(x, y, 0);
+            this.diceReferences[knownDieTypes[i]] = die;
+        }
+
+
+        this.box.drawSelector(Object.values(this.diceReferences));
+
         this.animate();
     }
 
     animate = () => {
         requestAnimationFrame(this.animate);
 
-        this.props.objects.forEach(obj => {
+        Object.values(this.diceReferences).forEach(obj => {
             obj.update();
         });
 
-        this.renderer.render(this.scene, this.camera);
+        this.box.render();
+    };
+
+    setCanvasRef = (ref) => {
+        this.canvas = ref;
     };
 
     render() {
         return (
-            <div></div>
+            <div
+                ref={this.setCanvasRef}
+                style={{height: this.props.height, width: this.props.width}}
+            />
         );
     }
 }

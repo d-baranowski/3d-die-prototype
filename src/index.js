@@ -2,9 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
-import THREE from './libs/three.min'
 import * as serviceWorker from './serviceWorker';
-import createDie from "./dice/diceMeshCreator";
 
 ReactDOM.render(<App />, document.getElementById('root'));
 

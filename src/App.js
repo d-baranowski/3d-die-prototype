@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './App.css';
-import SceneComponent from "./SceneComponent";
+import SceneComponent from "./componentns/SceneComponent";
 
 
 class App extends Component {
@@ -11,8 +11,7 @@ class App extends Component {
     render() {
         return (
             <div className="App">
-                <SceneComponent
-                />
+                <SceneComponent />
             </div>
         );
     }

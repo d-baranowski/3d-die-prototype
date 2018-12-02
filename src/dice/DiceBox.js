@@ -1,8 +1,15 @@
 import THREE from "../libs/three.min";
-import createDie from "./diceMeshCreator";
+
+const getDirection = (x1, y1, x2, y2) => {
+    // might be negative:
+    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+    // correct, positive angle:
+    return (angle + 360) % 360;
+};
 
 class DieBox {
     constructor(container) {
+        this.container = container;
         this.cw = container.clientWidth / 2;
         this.ch = container.clientHeight / 2;
 
@@ -35,50 +42,74 @@ class DieBox {
 
         this.scene.add(light);
 
+        container.addEventListener('mouseup', (ev) => {
+            const die = this.searchDieByMouse(ev);
+            die && die.onClick()
+        });
+
         this.renderer.render(this.scene, this.camera);
     };
+
+    generateSprite() {
+
+        var canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+
+        var context = canvas.getContext('2d');
+        var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
+        gradient.addColorStop(0, 'rgba(255,255,255,1)');
+        gradient.addColorStop(0.2, 'rgba(0,255,255,1)');
+        gradient.addColorStop(0.4, 'rgba(0,0,64,1)');
+        gradient.addColorStop(1, 'rgba(0,0,0,1)');
+
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        var texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        return texture;
+
+    }
 
     searchDieByMouse = (ev) => {
-        const intersects = (new THREE.Raycaster(this.camera.position,
-            (new THREE.Vector3((ev.clientX - this.cw) / this.aspect,
-                (ev.clientY - this.ch) / this.aspect, this.w / 9))
-                .sub(this.camera.position).normalize())).intersectObjects(this.dice);
+        const axis = new THREE.Vector3( 0, 0, -1 );
+        const direction  =  new THREE.Vector3(0, 1, 0);
+
+        const screenCenter = new THREE.Vector2(this.container.clientWidth/2, this.container.clientHeight/2);
+
+        const degrees = getDirection(ev.clientX, ev.clientY, screenCenter.x, screenCenter.y) - 90;
+        const angleDeg = degrees * Math.PI / 180;
+
+        direction.applyAxisAngle(axis, angleDeg);
+        const raycaster = new THREE.Raycaster(new THREE.Vector3(0,0,0), direction, 0, 200);
+
+        /*
+            SHOWS RAYCASTER
+            this.scene.add(new THREE.ArrowHelper(raycaster.ray.direction, raycaster.ray.origin, 300, 0xff0000) );
+        */
+
+
+        const intersects = raycaster.intersectObjects(this.dice);
+
         if (intersects.length) {
-            return intersects[0].object.userData;
+            return intersects[0].object;
         }
     };
 
-    drawSelector() {
-        const step = this.w / 4.5;
-        const knownDieTypes = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
-
-        for (let i = 0, pos = -3; i < knownDieTypes.length; ++i, ++pos) {
-            const die = createDie(knownDieTypes[i], this._scale);
-            die.position.set(pos * step, 0, step * 0.5);
-
-            this.dice.push(die);
-            this.scene.add(die);
+    drawSelector(dice) {
+        for (let i = 0; i < dice.length; ++i) {
+            this.dice.push(dice[i]);
+            this.scene.add(dice[i]);
         }
 
+        this.renderer.render(this.scene, this.camera);
+    };
+
+    render() {
         this.renderer.render(this.scene, this.camera);
     };
 }
 
 
-function diceInitialize(container, w, h) {
-    const canvas = document.getElementById('canvas');
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-
-    const box = new DieBox(canvas);
-
-    container.addEventListener('mouseup', (ev) => {
-        const dieProps = box.searchDieByMouse(ev);
-        console.log(dieProps);
-    });
-
-    box.drawSelector();
-}
-
-
-diceInitialize(document.body, window.innerWidth - 1, window.innerHeight - 1);
+export default DieBox

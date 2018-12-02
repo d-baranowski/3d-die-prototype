@@ -239,6 +239,31 @@ function createDie(type, _scale) {
         labelColor: defaultLabelColor,
         dieColor: defaultDieColor
     };
+
+    let xRotation = 0.01;
+    let yRotation = 0.01;
+    const callbacks = [];
+
+    die.update = () => {
+        xRotation -= xRotation > 0.01 ? 0.03 : 0;
+        yRotation -= yRotation > 0.01 ? 0.03 : 0;
+
+        die.rotation.x += xRotation;
+        die.rotation.y += yRotation;
+
+        xRotation = xRotation < 0.01 ? 0.01 : xRotation;
+        yRotation = yRotation < 0.01 ? 0.01 : yRotation;
+    };
+
+    die.addCallback = (val) => {
+        callbacks.push(val);
+    };
+
+    die.onClick = () => {
+        yRotation = 0.8;
+        callbacks.forEach(val => {val(die)})
+    };
+
     return die;
 }
 
