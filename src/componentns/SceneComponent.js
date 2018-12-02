@@ -2,9 +2,9 @@ import React, {Component} from 'react';
 import DieBox from "../dice/DiceBox";
 import createDie from "../dice/diceMeshCreator";
 
-export const mapOver = (value, istart, istop, ostart, ostop) => {
+const mapOver = (value, istart, istop, ostart, ostop) => {
     return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
-}
+};
 
 class SceneComponent extends Component {
     static defaultProps = {
@@ -17,22 +17,23 @@ class SceneComponent extends Component {
         this.box = new DieBox(this.canvas);
         this.diceReferences = {};
 
-        const step = this.box.w / 4.5;
+
         const knownDieTypes = this.props.dice;
         const r = 200;
 
         for (let i = 0, pos = -3; i < knownDieTypes.length; ++i, ++pos) {
             const die = createDie(knownDieTypes[i], this.box._scale);
-            // mapOver(distanceToDestination, 200, 1600, placeholderPosition.width, containerPosition.width)
+            die.addCallback((obj) => {
+                console.log("HEllo from " + obj)
+            });
+
             const angle = mapOver(i, 0, knownDieTypes.length, 0, 2 * Math.PI);
             const x = r*Math.cos(angle) + 5;
             const y = r*Math.sin(angle) + 5;
 
-            /*die.position.set(x, y, 0);*/
             die.position.set(x, y, 0);
             this.diceReferences[knownDieTypes[i]] = die;
         }
-
 
         this.box.drawSelector(Object.values(this.diceReferences));
 
